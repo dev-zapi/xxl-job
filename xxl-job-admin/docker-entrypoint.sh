@@ -35,7 +35,7 @@ if [ "$DB_INIT" = "true" ]; then
     echo "Waiting for database to be ready..."
     max_attempts=30
     attempt=0
-    until mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USERNAME" -p"$DB_PASSWORD" -e "SELECT 1" > /dev/null 2>&1; do
+    until MYSQL_PWD="$DB_PASSWORD" mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USERNAME" -e "SELECT 1" > /dev/null 2>&1; do
         attempt=$((attempt+1))
         if [ $attempt -eq $max_attempts ]; then
             echo "Failed to connect to database after $max_attempts attempts"
@@ -47,20 +47,20 @@ if [ "$DB_INIT" = "true" ]; then
     echo "Database connection successful!"
     
     # Check if database exists and has tables
-    DB_EXISTS=$(mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USERNAME" -p"$DB_PASSWORD" -e "SELECT COUNT(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='$DB_DATABASE';" -s -N)
+    DB_EXISTS=$(MYSQL_PWD="$DB_PASSWORD" mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USERNAME" -e "SELECT COUNT(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='$DB_DATABASE';" -s -N)
     
     if [ "$DB_EXISTS" -eq "0" ]; then
         echo "Database '$DB_DATABASE' does not exist. Creating database..."
-        mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USERNAME" -p"$DB_PASSWORD" -e "CREATE DATABASE IF NOT EXISTS \`$DB_DATABASE\` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+        MYSQL_PWD="$DB_PASSWORD" mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USERNAME" -e "CREATE DATABASE IF NOT EXISTS \`$DB_DATABASE\` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
     fi
     
     # Check if tables exist in the database
-    TABLE_COUNT=$(mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USERNAME" -p"$DB_PASSWORD" -D"$DB_DATABASE" -e "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA='$DB_DATABASE';" -s -N 2>/dev/null || echo "0")
+    TABLE_COUNT=$(MYSQL_PWD="$DB_PASSWORD" mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USERNAME" -D"$DB_DATABASE" -e "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA='$DB_DATABASE';" -s -N 2>/dev/null || echo "0")
     
     if [ "$TABLE_COUNT" -eq "0" ]; then
         echo "Database '$DB_DATABASE' exists but has no tables. Running initialization script..."
         if [ -f /docker-entrypoint-initdb.d/tables_xxl_job.sql ]; then
-            mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USERNAME" -p"$DB_PASSWORD" "$DB_DATABASE" < /docker-entrypoint-initdb.d/tables_xxl_job.sql
+            MYSQL_PWD="$DB_PASSWORD" mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USERNAME" "$DB_DATABASE" < /docker-entrypoint-initdb.d/tables_xxl_job.sql
             echo "Database initialization completed successfully!"
         else
             echo "ERROR: SQL initialization file not found at /docker-entrypoint-initdb.d/tables_xxl_job.sql"
