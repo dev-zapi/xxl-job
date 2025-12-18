@@ -1,5 +1,5 @@
 # base image
-FROM openjdk:21-jdk-slim
+FROM eclipse-temurin:21-jre-jammy
 
 # maintainer
 MAINTAINER xuxueli
@@ -28,7 +28,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN mkdir -p /docker-entrypoint-initdb.d
 
 # copy SQL initialization script
-COPY ../doc/db/tables_xxl_job.sql /docker-entrypoint-initdb.d/tables_xxl_job.sql
+COPY tables_xxl_job.sql /docker-entrypoint-initdb.d/tables_xxl_job.sql
 
 # copy jar
 ADD target/xxl-job-admin-*.jar /app.jar

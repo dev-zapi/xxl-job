@@ -47,6 +47,8 @@ services:
       DB_PASSWORD: root_pwd
       # 可选：额外的Spring Boot参数
       # PARAMS: "--server.port=8080"
+      # 旧方式（仍然支持）：直接通过PARAMS传递Spring Boot参数
+      # PARAMS: "--spring.datasource.url=jdbc:mysql://mysql:3306/xxl_job?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai --spring.datasource.username=root --spring.datasource.password=root_pwd"
     ports:
       - "8080:8080"
     depends_on:
