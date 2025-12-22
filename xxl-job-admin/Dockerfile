@@ -18,8 +18,8 @@ COPY doc/db/tables_xxl_job.sql /etc/xxl-job/tables.sql
 ADD xxl-job-admin/target/xxl-job-admin-*.jar /app.jar
 
 # Spring Boot SQL initialization configuration
-# Enable SQL initialization mode (always run the SQL script)
-ENV SPRING_SQL_INIT_MODE=always \
+# SQL initialization is disabled by default. Set SPRING_SQL_INIT_MODE=always to enable it.
+ENV SPRING_SQL_INIT_MODE=never \
     SPRING_SQL_INIT_SCHEMA_LOCATIONS=file:/etc/xxl-job/tables.sql \
     SPRING_SQL_INIT_CONTINUE_ON_ERROR=true
 
@@ -28,7 +28,7 @@ ENV SPRING_SQL_INIT_MODE=always \
 # - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/xxl_job?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
 # - SPRING_DATASOURCE_USERNAME=root
 # - SPRING_DATASOURCE_PASSWORD=root_pwd
-# - SPRING_SQL_INIT_MODE=always (to enable SQL initialization)
+# - SPRING_SQL_INIT_MODE=always (to enable automatic database initialization, set to 'never' to disable)
 # log home: -e LOG_HOME=/data/applogs
 # jvm options: -e JAVA_OPTS="-Xms128m -Xmx128m"
 CMD ["sh", "-c", "java ${LOG_HOME:+-DLOG_HOME=$LOG_HOME} ${JAVA_OPTS} -jar /app.jar"]
