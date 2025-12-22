@@ -4,43 +4,31 @@ FROM eclipse-temurin:21-jre-jammy
 # maintainer
 MAINTAINER xuxueli
 
-# install mysql client for database initialization
-RUN apt-get update && \
-    apt-get install -y default-mysql-client && \
-    rm -rf /var/lib/apt/lists/*
-
-# set params
-ENV PARAMS=""
-
-# database initialization environment variables
-ENV DB_INIT=false \
-    DB_HOST=127.0.0.1 \
-    DB_PORT=3306 \
-    DB_DATABASE=xxl_job \
-    DB_USERNAME=root \
-    DB_PASSWORD=root_pwd
-
 # set timezone
 ENV TZ=PRC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# create directory for init scripts
-RUN mkdir -p /docker-entrypoint-initdb.d
+# create directory for SQL file
+RUN mkdir -p /etc/xxl-job
 
 # copy SQL initialization script
-COPY doc/db/tables_xxl_job.sql /docker-entrypoint-initdb.d/tables_xxl_job.sql
+COPY doc/db/tables_xxl_job.sql /etc/xxl-job/tables.sql
 
 # copy jar
 ADD xxl-job-admin/target/xxl-job-admin-*.jar /app.jar
 
-# copy entrypoint script
-COPY xxl-job-admin/docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+# Spring Boot SQL initialization configuration
+# Enable SQL initialization mode (always run the SQL script)
+ENV SPRING_SQL_INIT_MODE=always \
+    SPRING_SQL_INIT_SCHEMA_LOCATIONS=file:/etc/xxl-job/tables.sql \
+    SPRING_SQL_INIT_CONTINUE_ON_ERROR=true
 
 # command
-# database init: -e DB_INIT=true (default: false)
-# database config: -e DB_HOST=mysql -e DB_PORT=3306 -e DB_DATABASE=xxl_job -e DB_USERNAME=root -e DB_PASSWORD=root_pwd
+# Spring Boot properties can be passed as environment variables:
+# - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/xxl_job?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
+# - SPRING_DATASOURCE_USERNAME=root
+# - SPRING_DATASOURCE_PASSWORD=root_pwd
+# - SPRING_SQL_INIT_MODE=always (to enable SQL initialization)
 # log home: -e LOG_HOME=/data/applogs
 # jvm options: -e JAVA_OPTS="-Xms128m -Xmx128m"
-# app params: -e PARAMS="--server.port=8080"
-ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["sh", "-c", "java ${LOG_HOME:+-DLOG_HOME=$LOG_HOME} ${JAVA_OPTS} -jar /app.jar"]
