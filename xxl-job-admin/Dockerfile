@@ -18,7 +18,8 @@ COPY doc/db/tables_xxl_job.sql /etc/xxl-job/tables.sql
 ADD xxl-job-admin/target/xxl-job-admin-*.jar /app.jar
 
 # Spring Boot SQL initialization configuration
-# SQL initialization is disabled by default. Set SPRING_SQL_INIT_MODE=always to enable it.
+# By default, SQL initialization is disabled. To enable automatic database initialization,
+# set SPRING_SQL_INIT_MODE=always (e.g., in docker-compose or via -e flag).
 ENV SPRING_SQL_INIT_MODE=never \
     SPRING_SQL_INIT_SCHEMA_LOCATIONS=file:/etc/xxl-job/tables.sql \
     SPRING_SQL_INIT_CONTINUE_ON_ERROR=true
